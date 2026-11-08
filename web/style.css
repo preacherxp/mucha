@@ -404,18 +404,12 @@ dialog[open]::backdrop { opacity: 1; }
 ::view-transition-old(sealed), ::view-transition-new(sealed),
 ::view-transition-old(history), ::view-transition-new(history) { width: 100%; height: 100%; object-fit: none; object-position: top center; }
 
-/* Theme change: the new theme blooms out of the toggle through the petals of bloom.svg, with a gold line along
-   their edges. --k scales both the mask and the line work, so they stay in step. It ends once the petals' valleys
-   clear the farthest corner, which app.js works out as --bloom-end. */
+/* Theme change: the new theme blooms out of the toggle through the petals of bloom.svg. --k scales the mask, and
+   ends once the petals' valleys clear the farthest corner, which app.js works out as --bloom-end. */
 @property --k { syntax: "<number>"; inherits: false; initial-value: 0; }
 @keyframes bloom { to { --k: var(--bloom-end); } }
-#bloom { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; stroke: var(--gold); overflow: hidden; visibility: hidden; }
-.theme-bloom #bloom { visibility: visible; }
-#bloom g { transform: translate(var(--bloom-x), var(--bloom-y)) scale(var(--k)); }
-.bloom-run #bloom g { animation: bloom 1000ms cubic-bezier(.5, 0, .3, 1) forwards; }
 /* Everything is one snapshot here, so the whole page is inside the petals rather than gliding separately. */
 .theme-bloom * { view-transition-name: none !important; }
-.theme-bloom #bloom { view-transition-name: bloom !important; }
 .theme-bloom::view-transition-old(root) { animation: none; }
 .theme-bloom::view-transition-new(root) {
   animation: bloom 1000ms cubic-bezier(.5, 0, .3, 1) forwards;
@@ -424,9 +418,6 @@ dialog[open]::backdrop { opacity: 1; }
   mask-size: calc(var(--k) * 1000px) calc(var(--k) * 1000px);
   mask-position: calc(var(--bloom-x) - var(--k) * 500px) calc(var(--bloom-y) - var(--k) * 500px);
 }
-.theme-bloom::view-transition-group(bloom) { animation: none; }
-.theme-bloom::view-transition-old(bloom) { display: none; }
-.theme-bloom::view-transition-new(bloom) { animation: none; mix-blend-mode: normal; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-name: fade-in !important; transition-duration: 200ms !important; }

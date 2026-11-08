@@ -73,7 +73,7 @@ Nothing leaves your machine. The page talks only to the local process, on `127.0
 
 The theme toggle follows your system until you press it. It changes theme by opening a flower across the page, because the project is named after [Alphonse Mucha](https://en.wikipedia.org/wiki/Alphonse_Mucha). With reduced motion on, it switches instantly.
 
-<p align="center"><img src="docs/bloom.png" width="640" alt="The theme change part way through: a pinwheel of gold-edged petals opening from the top right corner, the light theme inside the petals and the dark theme outside, with gold veins ending in small spiral curls."></p>
+<p align="center"><img src="docs/bloom.png" width="640" alt="The theme change part way through: a pinwheel of petals opening from the top right corner, the light theme inside the petals and the dark theme outside."></p>
 
 ### Try it without a cluster
 

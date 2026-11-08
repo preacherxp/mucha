@@ -659,10 +659,10 @@ $('#theme').onclick = async () => {
   // 285 is the radius, in bloom.svg units, that every petal valley reaches, so the page ends up fully covered.
   root.style.setProperty('--bloom-end', Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) / 285);
   root.classList.add('theme-bloom');
-  const t = document.startViewTransition(() => { root.classList.add('bloom-run'); switchTheme(); });
+  const t = document.startViewTransition(switchTheme);
   t.ready.catch(() => {});
   await t.finished.catch(() => {});
-  root.classList.remove('theme-bloom', 'bloom-run');
+  root.classList.remove('theme-bloom');
 };
 systemDark.addEventListener('change', renderTheme);
 renderTheme();
