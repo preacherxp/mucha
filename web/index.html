@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en" class="booting">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mucha · sealed secrets</title>
+<link rel="icon" href="favicon.svg">
+<link rel="preload" href="Federant-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<script src="theme.js"></script>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#secret">Skip to the secret</a>
+
+<header class="bar">
+  <img src="favicon.svg" alt="" width="24" height="24">
+  <h1>Mucha</h1>
+  <span class="bar-sub">kubeseal UI</span>
+  <span class="spacer"></span>
+  <button type="button" id="theme" class="icon"><svg class="i" aria-hidden="true"><use href="icons.svg#i-moon"/></svg></button>
+</header>
+
+<main class="grid">
+    <section class="panel" id="cert-panel" aria-labelledby="h-cert">
+      <h2 id="h-cert"><span class="num">1</span>Certificate</h2>
+      <div class="tabs" role="tablist" aria-label="Certificate source">
+        <button type="button" role="tab" id="tab-cluster" aria-selected="true" aria-controls="pane-cluster">From cluster</button>
+        <button type="button" role="tab" id="tab-file" aria-selected="false" aria-controls="pane-file" tabindex="-1">From file</button>
+      </div>
+      <div class="tab-panes">
+      <div id="pane-cluster" role="tabpanel" aria-labelledby="tab-cluster" class="stack">
+        <div class="field">
+          <label for="context">Kubeconfig context</label>
+          <select id="context"><option value="">Loading contexts…</option></select>
+        </div>
+        <details class="controller">
+          <summary>Controller location</summary>
+          <div class="row2">
+            <div class="field"><label for="ctrl-ns">Namespace</label><input id="ctrl-ns" class="mono" value="kube-system" spellcheck="false" autocomplete="off"></div>
+            <div class="field"><label for="ctrl-name">Service name</label><input id="ctrl-name" class="mono" value="sealed-secrets-controller" spellcheck="false" autocomplete="off"></div>
+          </div>
+        </details>
+        <div><button type="button" id="fetch" class="btn ghost"><svg class="i"><use href="icons.svg#i-arrows-clockwise"/></svg>Fetch certificate</button></div>
+      </div>
+      <div id="pane-file" role="tabpanel" aria-labelledby="tab-file" class="stack" hidden>
+        <div class="field">
+          <label for="pem">Public certificate (<code>kubeseal --fetch-cert</code>)</label>
+          <textarea id="pem" class="mono" rows="2" spellcheck="false" autocomplete="off" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+        </div>
+        <div class="actions">
+          <button type="button" id="pem-pick" class="btn ghost"><svg class="i"><use href="icons.svg#i-upload-simple"/></svg>Choose file</button>
+          <input type="file" id="pem-file" accept=".pem,.crt,.cer,text/plain" hidden>
+          <button type="button" id="use-pem" class="btn ghost">Use certificate</button>
+        </div>
+      </div>
+      </div>
+      <div id="cert" class="medallion" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" id="secret" aria-labelledby="h-secret">
+      <div class="panel-head">
+        <h2 id="h-secret"><span class="num">2</span>Secret</h2>
+        <button type="button" id="open-import" class="btn ghost sm"><svg class="i"><use href="icons.svg#i-file-arrow-up"/></svg>Import YAML</button>
+      </div>
+      <p id="imported" class="note" hidden></p>
+      <div id="original" class="original" hidden>
+        <div class="pane-head"><span>Original YAML</span><button type="button" class="icon orig-reveal"><svg class="i" aria-hidden="true"><use href="icons.svg#i-eye"/></svg></button></div>
+        <pre class="code orig-yaml" tabindex="0" aria-label="Original YAML as imported"></pre>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" class="mono" spellcheck="false" autocomplete="off" placeholder="db-credentials">
+          <small class="hint" id="name-hint"></small>
+        </div>
+        <div class="field">
+          <label for="namespace">Namespace</label>
+          <input id="namespace" class="mono" list="ns-list" spellcheck="false" autocomplete="off" placeholder="default">
+          <datalist id="ns-list"></datalist>
+          <small class="hint" id="namespace-hint"></small>
+        </div>
+      </div>
+      <div class="field">
+        <label for="type">Type</label>
+        <select id="type" class="mono" autocomplete="off">
+          <option value="Opaque">Opaque</option>
+          <option value="kubernetes.io/tls">kubernetes.io/tls</option>
+          <option value="kubernetes.io/dockerconfigjson">kubernetes.io/dockerconfigjson</option>
+          <option value="kubernetes.io/basic-auth">kubernetes.io/basic-auth</option>
+          <option value="kubernetes.io/ssh-auth">kubernetes.io/ssh-auth</option>
+        </select>
+      </div>
+      <fieldset class="scopes">
+        <legend>Scope</legend>
+        <label class="scope"><input type="radio" name="scope" value="strict" autocomplete="off" checked>
+          <span><b>strict</b>Only <code data-label="strict"></code>. Renaming or moving breaks it.</span></label>
+        <label class="scope"><input type="radio" name="scope" value="namespace-wide" autocomplete="off">
+          <span><b>namespace-wide</b>Any name in <code data-label="namespace-wide"></code>.</span></label>
+        <label class="scope"><input type="radio" name="scope" value="cluster-wide" autocomplete="off">
+          <span><b>cluster-wide</b>Any name, any namespace. Anyone who can create secrets can read it.</span></label>
+      </fieldset>
+      <p id="lock" class="notice" hidden></p>
+      <h3>Keys</h3>
+      <ol id="keys" class="keys"></ol>
+      <button type="button" id="add-key" class="btn ghost sm"><svg class="i"><use href="icons.svg#i-plus"/></svg>Add key</button>
+    </section>
+
+    <section class="panel" id="sealed-panel" aria-labelledby="h-out">
+      <h2 id="h-out"><span class="num">3</span>Seal</h2>
+      <ul id="issues" class="issues" aria-live="polite"></ul>
+      <button type="button" id="seal" class="btn primary wide" disabled>Seal</button>
+      <p class="kbd"><kbd>⌘</kbd> <kbd>Enter</kbd></p>
+      <div id="output" class="output" hidden>
+        <div class="out-head">
+          <img class="wax" src="favicon.svg" alt="">
+          <span id="out-meta"></span>
+        </div>
+        <p id="stale" class="notice" hidden>The form changed after sealing. Seal again before you copy.</p>
+        <div class="compare">
+          <div class="pane" id="orig-pane" hidden>
+            <div class="pane-head"><span>Original, as imported</span><button type="button" class="icon orig-reveal"><svg class="i" aria-hidden="true"><use href="icons.svg#i-eye"/></svg></button></div>
+            <pre class="code orig-yaml" tabindex="0" aria-label="Original YAML as imported"></pre>
+          </div>
+          <div class="pane">
+            <div class="pane-head"><span>Sealed</span></div>
+            <pre id="yaml" class="code" tabindex="0" aria-label="Sealed secret YAML"></pre>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="copy" class="btn"><svg class="i"><use href="icons.svg#i-copy"/></svg><span>Copy</span></button>
+          <button type="button" id="download" class="btn ghost"><svg class="i"><use href="icons.svg#i-download-simple"/></svg>Download</button>
+          <button type="button" id="clear" class="btn ghost">Clear plaintext</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="history" aria-labelledby="h-history">
+      <h2 id="h-history" tabindex="-1"><span class="num">4</span>History</h2>
+      <p id="hist-path" class="muted hist-path"></p>
+      <h3>Sealed secrets</h3>
+      <ul id="hist-sealed" class="hist"></ul>
+      <h3>Certificates</h3>
+      <ul id="hist-certs" class="hist"></ul>
+      <p id="history-error" class="error" role="alert"></p>
+    </section>
+</main>
+
+<dialog id="import-dialog" aria-labelledby="h-import">
+  <form method="dialog" class="stack">
+    <h2 id="h-import">Import YAML</h2>
+    <p>Paste a <code>Secret</code> to seal it, or a <code>SealedSecret</code> to add or replace keys in it. This replaces the current form.</p>
+    <textarea id="import-text" class="mono" rows="12" spellcheck="false" aria-label="YAML to import" placeholder="apiVersion: v1&#10;kind: Secret&#10;…"></textarea>
+    <p id="import-error" class="error" role="alert"></p>
+    <div class="actions">
+      <button type="button" id="import-pick" class="btn ghost"><svg class="i"><use href="icons.svg#i-upload-simple"/></svg>Choose file</button>
+      <input type="file" id="import-file" accept=".yaml,.yml,.json,text/plain" hidden>
+      <span class="spacer"></span>
+      <button value="cancel" class="btn ghost" formnovalidate>Cancel</button>
+      <button type="button" id="do-import" class="btn primary">Import</button>
+    </div>
+  </form>
+</dialog>
+
+<svg id="bloom" aria-hidden="true"><g><use href="bloom.svg#lines"/></g></svg>
+
+<template id="key-row">
+  <li class="key">
+    <div class="key-top">
+      <input class="k mono" placeholder="key" aria-label="Key" spellcheck="false" autocomplete="off">
+      <span class="sealed-tag" hidden><svg class="i"><use href="icons.svg#i-lock-simple"/></svg>Sealed, kept as is</span>
+      <span class="tools">
+        <button type="button" class="icon reveal" title="Show value" aria-label="Show value" aria-pressed="false"><svg class="i"><use href="icons.svg#i-eye"/></svg></button>
+        <button type="button" class="icon pick" title="Load value from a file" aria-label="Load value from a file"><svg class="i"><use href="icons.svg#i-file-arrow-up"/></svg></button>
+        <button type="button" class="icon replace" title="Replace the sealed value" aria-label="Replace the sealed value" hidden><svg class="i"><use href="icons.svg#i-arrows-clockwise"/></svg></button>
+        <button type="button" class="icon remove" title="Remove key" aria-label="Remove key"><svg class="i"><use href="icons.svg#i-trash"/></svg></button>
+      </span>
+      <input type="file" class="file" hidden>
+    </div>
+    <textarea class="v mono masked" rows="1" placeholder="value" aria-label="Value" spellcheck="false" autocomplete="off"></textarea>
+    <details class="docker" hidden>
+      <summary>Build from a registry login</summary>
+      <div class="row3">
+        <label class="field">Registry<input class="d-reg mono" value="ghcr.io" spellcheck="false" autocomplete="off"></label>
+        <label class="field">Username<input class="d-user mono" spellcheck="false" autocomplete="off"></label>
+        <label class="field">Password or token<input class="d-pass mono" type="password" autocomplete="off"></label>
+      </div>
+      <button type="button" class="btn ghost sm d-build">Write value</button>
+    </details>
+    <ul class="hints"></ul>
+  </li>
+</template>
+</body>
+</html>

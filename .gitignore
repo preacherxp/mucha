@@ -1,0 +1,5 @@
+/mucha
+.DS_Store
+# Made locally for trying it out, see the README. A private key doesn't belong in git, even a throwaway one.
+testdata/test-key.pem
+testdata/test-cert.pem
